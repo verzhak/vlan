@@ -3,6 +3,7 @@
 #define ALL_HPP
 
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <signal.h>

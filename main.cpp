@@ -55,9 +55,15 @@ void cb(u_char * user, const pcap_pkthdr * header, const u_char * data)
 {
 	const uint16_t * ptr = (uint16_t *) data;
 	const uint16_t vlan = htons(* (uint16_t *) (ptr + 7)) & 0x0FFF;
-	const uint16_t proto = htons(* (uint16_t *) (ptr + 8));
+	const string vlan_str = to_string(vlan);
+	const string vlan_if = dname + string(".") + vlan_str;
+	const string command_1 = string("sudo ip link add link ") + dname + string(" name ") + vlan_if + string(" type vlan id ") + vlan_str;
+	const string command_2 = string("sudo ip link set dev ") + vlan_if + string(" up");
 
-	printf("TODO: create vlan %u\n", vlan);
+//	printf("%s\n%s\n", command_1.c_str(), command_2.c_str());
+	throw_if(system(command_1.c_str()));
+	throw_if(system(command_2.c_str()));
+
 	vlans.push_back(vlan);
 	
 	bpf_compile();
@@ -115,7 +121,9 @@ void bpf_print()
 	unsigned v;
 
 	for(v = 0; v < bpf.bf_len; v++)
-		printf("%u -> 0x%X 0x%X 0x%X 0x%X = %u %u %u %u\n", v,
+		/*
+		printf("%u -> 0x%X 0x%X 0x%X 0x%X = %u %u %u %u = 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X\n",
+				v, 
 				bpf.bf_insns[v].code,
 				bpf.bf_insns[v].jt,
 				bpf.bf_insns[v].jf,
@@ -123,6 +131,16 @@ void bpf_print()
 				bpf.bf_insns[v].code,
 				bpf.bf_insns[v].jt,
 				bpf.bf_insns[v].jf,
-				bpf.bf_insns[v].k);
+				bpf.bf_insns[v].k,
+				*/
+		printf("0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X\n",
+				((uint8_t *) & bpf.bf_insns[v].code)[0],
+				((uint8_t *) & bpf.bf_insns[v].code)[1],
+				bpf.bf_insns[v].jt,
+				bpf.bf_insns[v].jf,
+				((uint8_t *) & bpf.bf_insns[v].k)[0],
+				((uint8_t *) & bpf.bf_insns[v].k)[1],
+				((uint8_t *) & bpf.bf_insns[v].k)[2],
+				((uint8_t *) & bpf.bf_insns[v].k)[3]);
 }
 
